@@ -10,9 +10,6 @@ from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import StaleElementReferenceException
 from bs4 import BeautifulSoup
 
-##############################################################  ############
-##################### variable related selenium ##########################
-##########################################################################
 options = webdriver.ChromeOptions()
 options.add_argument('headless')
 options.add_argument('lang=ko_KR')
@@ -24,10 +21,10 @@ def main():
     global driver, load_wb, review_num
 
     driver.implicitly_wait(4)  # 렌더링 될때까지 기다린다 4초
-    driver.get('https://map.kakao.com/')  # 주소 가져오기
+    driver.get('https://map.kakao.com/')
 
-    # 검색할 목록
-    place_infos = ['공영 주차장']
+    # 검색
+    place_infos = ['공영 주차장'] 
 
     for i, place in enumerate(place_infos):
         # delay
