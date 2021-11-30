@@ -2,6 +2,7 @@
 
 import os
 from time import sleep
+import pandas as pd
 
 from selenium import webdriver
 from selenium.webdriver.common.keys import Keys
@@ -10,6 +11,9 @@ from selenium.common.exceptions import ElementNotInteractableException
 from selenium.common.exceptions import StaleElementReferenceException
 from bs4 import BeautifulSoup
 
+##############################################################  ############
+##################### variable related selenium ##########################
+##########################################################################
 options = webdriver.ChromeOptions()
 options.add_argument('headless')
 options.add_argument('lang=ko_KR')
@@ -21,10 +25,10 @@ def main():
     global driver, load_wb, review_num
 
     driver.implicitly_wait(4)  # 렌더링 될때까지 기다린다 4초
-    driver.get('https://map.kakao.com/')
+    driver.get('https://map.kakao.com/')  # 주소 가져오기
 
-    # 검색
-    place_infos = ['공영 주차장'] 
+    # 검색할 목록
+    place_infos = ['공영 주차장']
 
     for i, place in enumerate(place_infos):
         # delay
@@ -123,6 +127,21 @@ def crawling(place, place_lists):
             
 
         # 그 이후 페이지
+        while True:
+            idx = 4
+            try:
+                page_num = len(driver.find_elements_by_class_name('link_page'))
+                for i in range(page_num-1):
+                    driver.find_element_by_css_selector('#mArticle > div.cont_evaluation > div.evaluation_review > div > a:nth-child(' + str(idx) +')').send_keys(Keys.ENTER)
+                    sleep(1)
+                    extract_review(place_name)
+                    idx += 1
+                driver.find_element_by_link_text('다음').send_keys(Keys.ENTER) # 10페이지 이상으로 넘어가기 위한 다음 버튼 클릭
+                sleep(1)
+                extract_review(place_name) # 리뷰 추출
+            except (NoSuchElementException, ElementNotInteractableException):
+                print("no review in crawling")
+                break
 
 
         driver.close()
@@ -152,12 +171,26 @@ def extract_review(place_name):
                 else:
                     val = comment[0].text + '/0'
                 print(val)
+                
 
     else:
-        print('no review in extract')
+        val = 'no review in extract'
+        print(val)
         ret = False
-
+    
+    #json 저장
+    data = {'name' : ['주차장명','리뷰/별점'],
+            '주차장명' : [place_name],
+            '리뷰,별점' : [val]
+            }
+    df = pd.DataFrame(data)
+    df.set_index('name',inplace=True)
+    print(df)
+    
+    df.to_json("D:\VSCode\python\sample.json")    
+        
     return ret
+    
 
 
 if __name__ == "__main__":
